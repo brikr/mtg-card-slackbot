@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'sinatra'
+require 'sinatra/json'
 require 'net/http'
 require 'json'
 
@@ -79,7 +80,7 @@ def card_info(text)
     fields << loyalty unless loyalty.nil?
     fields << rarity
     
-    JSON.generate({
+    {
         text: "",  # send a text response (replies to channel if not blank)
         attachments: [{
             :title => card['name'],
@@ -90,9 +91,9 @@ def card_info(text)
         icon_url: "http://seeklogo.com/images/M/magic-the-gathering-logo-E672A43B2E-seeklogo.com.gif",    # overwrite configured icon (ex: https://mydomain.com/some/image.png
         icon_emoji: "",  # overwrite configured icon (ex: :smile:)
         response_type: "in_channel"
-        })
+    }
 end 
 
-get '/' do
-    card_info(params['text'])
+post '/' do
+    json card_info(params['text'])
 end
