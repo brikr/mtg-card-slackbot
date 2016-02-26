@@ -104,7 +104,7 @@ def combo_info(cards)
     card = data.first
 
     return {
-      text: "Could not match `#{text}` to any cards.", # send a text response (replies to channel if not blank)
+      text: "Could not match `#{card_name}` to any cards.", # send a text response (replies to channel if not blank)
       attachments: [], # add attatchments: https://api.slack.com/docs/attachments
       username: 'MTG Bot', # overwrite configured username (ex: MyCoolBot)
       icon_url: 'http://seeklogo.com/images/M/magic-the-gathering-logo-E672A43B2E-seeklogo.com.gif', # overwrite configured icon (ex: https://mydomain.com/some/image.png
