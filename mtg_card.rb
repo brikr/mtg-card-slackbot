@@ -98,6 +98,7 @@ end
 def combo_info(cards)
   attachments = []
   cards.each do |card_name|
+    card_name.strip!
     uri = URI.parse('https://api.deckbrew.com/mtg/cards')
     uri.query = URI.encode_www_form(name: card_name)
     data = JSON.parse(Net::HTTP.get(uri))
@@ -112,7 +113,7 @@ def combo_info(cards)
     } if card.nil?
 
     attachments << {
-      title: card_name,
+      title: card['name'],
       image_url: card['editions'].last['image_url']
     }
   end
