@@ -4,8 +4,8 @@ cd `dirname "${BASH_SOURCE[0]}"`
 
 git pull
 
-pkill -f mtg-card.rb
+pkill -f mtg_card.rb
 sleep 10
-nohup ruby mtg-card.rb &
+nohup ruby mtg_card.rb &
 
 exit 0
