@@ -4,21 +4,30 @@ require 'sinatra/json'
 require 'net/http'
 require 'json'
 
+def make_response(text, attachments = [], response_type = 'in_channel')
+  {
+    text: text,
+    attachments: attachments,
+    username: 'MTG Bot',
+    icon_url: 'http://seeklogo.com/images/M\
+               /magic-the-gathering-logo-E672A43B2E-seeklogo.com.gif',
+    icon_emoji: '',
+    response_type: response_type
+  }
+end
+
 def card_info(text)
   uri = URI.parse('https://api.deckbrew.com/mtg/cards')
   uri.query = URI.encode_www_form(name: text)
   data = JSON.parse(Net::HTTP.get(uri))
-  card = data.first
+  card = data.find { |x| x['name'].casecmp(text.downcase).zero? }
+  card = data.first if card.nil?
 
-  return {
-    text: "Could not match `#{text}` to any cards.", # send a text response (replies to channel if not blank)
-    attachments: [], # add attatchments: https://api.slack.com/docs/attachments
-    username: 'MTG Bot', # overwrite configured username (ex: MyCoolBot)
-    icon_url: 'http://seeklogo.com/images/M/magic-the-gathering-logo-E672A43B2E-seeklogo.com.gif', # overwrite configured icon (ex: https://mydomain.com/some/image.png
-    icon_emoji: '', # overwrite configured icon (ex: :smile:)
-  } if card.nil?
+  if card.nil?
+    return make_response("Could not match `#{text}` to any cards.",
+                         'ephemeral')
+  end
 
-  cost = nil
   cost = {
     title: 'Cost',
     value: card['cost'],
@@ -81,18 +90,13 @@ def card_info(text)
   fields << loyalty unless loyalty.nil?
   fields << rarity
 
-  {
-    text: '', # send a text response (replies to channel if not blank)
-    attachments: [{
-      title: card['name'],
-      fields: fields,
-      image_url: card['editions'].last['image_url']
-    }], # add attatchments: https://api.slack.com/docs/attachments
-    username: 'MTG Bot', # overwrite configured username (ex: MyCoolBot)
-    icon_url: 'http://seeklogo.com/images/M/magic-the-gathering-logo-E672A43B2E-seeklogo.com.gif', # overwrite configured icon (ex: https://mydomain.com/some/image.png
-    icon_emoji: '', # overwrite configured icon (ex: :smile:)
-    response_type: 'in_channel'
-  }
+  attachments = [{
+    title: card['name'],
+    fields: fields,
+    image_url: card['editions'].last['image_url']
+  }]
+
+  make_response('', attachments)
 end
 
 def combo_info(cards)
@@ -104,13 +108,10 @@ def combo_info(cards)
     data = JSON.parse(Net::HTTP.get(uri))
     card = data.first
 
-    return {
-      text: "Could not match `#{card_name}` to any cards.", # send a text response (replies to channel if not blank)
-      attachments: [], # add attatchments: https://api.slack.com/docs/attachments
-      username: 'MTG Bot', # overwrite configured username (ex: MyCoolBot)
-      icon_url: 'http://seeklogo.com/images/M/magic-the-gathering-logo-E672A43B2E-seeklogo.com.gif', # overwrite configured icon (ex: https://mydomain.com/some/image.png
-      icon_emoji: '', # overwrite configured icon (ex: :smile:)
-    } if card.nil?
+    if card.nil?
+      return make_response("Could not match `#{card_name}` to any cards.",
+                           'ephemeral')
+    end
 
     attachments << {
       title: card['name'],
@@ -118,14 +119,7 @@ def combo_info(cards)
     }
   end
 
-  {
-    text: 'Combo',
-    attachments: attachments,
-    username: 'MTG Bot', # overwrite configured username (ex: MyCoolBot)
-    icon_url: 'http://seeklogo.com/images/M/magic-the-gathering-logo-E672A43B2E-seeklogo.com.gif', # overwrite configured icon (ex: https://mydomain.com/some/image.png
-    icon_emoji: '', # overwrite configured icon (ex: :smile:)
-    response_type: 'in_channel'
-  }
+  make_response('Combo', attachments)
 end
 
 post '/' do
