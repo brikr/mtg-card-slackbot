@@ -127,8 +127,7 @@ def combo_info(cards)
 
   img.write 'img.png'
 
-  make_response(card_names.join(' + '), title: 'Combo',
-                                        image_url: 'http://mtg.butthole.tv/img.png')
+  make_response(card_names.join(' + '), image_url: 'http://mtg.butthole.tv/img.png')
 end
 
 post '/' do
