@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
+require 'json'
+require 'mini_magick'
+require 'net/http'
 require 'sinatra'
 require 'sinatra/json'
-require 'net/http'
-require 'json'
 
 def make_response(text, attachments = [], response_type = 'in_channel')
   {
@@ -25,7 +26,7 @@ def card_info(text)
 
   if card.nil?
     return make_response("Could not match `#{text}` to any cards.",
-                         'ephemeral')
+                         [], 'ephemeral')
   end
 
   cost = {
@@ -100,8 +101,11 @@ def card_info(text)
 end
 
 def combo_info(cards)
-  attachments = []
-  cards.each do |card_name|
+  # MiniMagick::Image.create has issues so we just use command line
+  system "convert -size #{cards.length * 223}x310 xc:'#ffffff' img.png"
+  img = MiniMagick::Image.new 'img.png'
+  card_names = []
+  cards.each_with_index do |card_name, idx|
     card_name.strip!
     uri = URI.parse('https://api.deckbrew.com/mtg/cards')
     uri.query = URI.encode_www_form(name: card_name)
@@ -113,13 +117,17 @@ def combo_info(cards)
                            'ephemeral')
     end
 
-    attachments << {
-      title: card['name'],
-      image_url: card['editions'].last['image_url']
-    }
+    card_names << card['name']
+    card_img = MiniMagick::Image.open(card['editions'].last['image_url'])
+    img = img.composite(card_img) do |c|
+      c.compose 'Over'
+      c.geometry "+#{idx * 223}+0"
+    end
   end
 
-  make_response('Combo', attachments)
+  img.write 'img.png'
+
+  make_response(card_names.join(' + '), image_url: 'http://mtg.butthole.tv/img.png')
 end
 
 post '/' do
@@ -129,4 +137,8 @@ post '/' do
   else
     json combo_info(cards)
   end
+end
+
+get '/img.png' do
+  send_file 'img.png'
 end
