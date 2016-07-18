@@ -93,7 +93,7 @@ def card_info(text)
   attachments = [{
     title: card['name'],
     fields: fields,
-    image_url: card['editions'].last['image_url']
+    image_url: card['editions'].max_by { |e| e['multiverse_id'] }['image_url']
   }]
 
   make_response('', attachments)
