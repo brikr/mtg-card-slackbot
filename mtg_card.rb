@@ -117,7 +117,7 @@ def card_info(text)
 
   price = {
     title: 'Price',
-    value: low_price(card['name']),
+    value: "$#{low_price(card['name'])}",
     short: true
   }
 
