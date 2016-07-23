@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
+
+require 'json'
+require 'net/http'
+require 'nokogiri'
 require 'sinatra'
 require 'sinatra/json'
-require 'net/http'
-require 'json'
 
 def make_response(text, attachments = [], response_type = 'in_channel')
   {
@@ -14,6 +16,37 @@ def make_response(text, attachments = [], response_type = 'in_channel')
     icon_emoji: '',
     response_type: response_type
   }
+end
+
+def card_urls(name, foil = false)
+  uri = URI('http://www.mtggoldfish.com/autocomplete')
+  params = { term: "#{name} [" }
+  uri.query = URI.encode_www_form(params)
+
+  res = JSON.parse(Net::HTTP.get_response(uri).body)
+
+  urls = res.map do |c|
+    set = c['set'].gsub(/[^a-z0-9\s]/i, '').tr(' ', '+')
+    name = c['name'].gsub(/[^a-z0-9\s]/i, '').tr(' ', '+')
+    if foil
+      next unless c['foil']
+      next "http://www.mtggoldfish.com/price/#{set}:Foil/#{name}"
+    else
+      next if c['foil']
+      next "http://www.mtggoldfish.com/price/#{set}/#{name}"
+    end
+  end
+
+  urls.reject(&:nil?)
+end
+
+def low_price(name, foil = false)
+  prices = card_urls(name, foil).map do |url|
+    page = Nokogiri::HTML(Net::HTTP.get(URI.parse(url)))
+    page.css('div.paper div.price-box-price').text.to_f
+  end
+
+  prices.select { |p| p > 0 }.min
 end
 
 def card_info(text)
@@ -82,6 +115,12 @@ def card_info(text)
     short: true
   }
 
+  price = {
+    title: 'Price',
+    value: low_price(card['name']),
+    short: true
+  }
+
   fields = []
   fields << cost
   fields << type
@@ -89,6 +128,7 @@ def card_info(text)
   fields << p_t unless p_t.nil?
   fields << loyalty unless loyalty.nil?
   fields << rarity
+  fields << price
 
   attachments = [{
     title: card['name'],
