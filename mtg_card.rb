@@ -19,21 +19,20 @@ def make_response(text, attachments = [], response_type = 'in_channel')
 end
 
 def card_urls(name, foil = false)
-  uri = URI('http://www.mtggoldfish.com/autocomplete')
-  params = { term: "#{name} [" }
-  uri.query = URI.encode_www_form(params)
+  uri = URI.parse('https://www.mtggoldfish.com/autocomplete')
+  uri.query = URI.encode_www_form(term: "#{name} [")
 
-  res = JSON.parse(Net::HTTP.get_response(uri).body)
+  res = JSON.parse(Net::HTTP.get(uri))
 
   urls = res.map do |c|
     set = c['set'].gsub(/[^a-z0-9\s]/i, '').tr(' ', '+')
     name = c['name'].gsub(/[^a-z0-9\s]/i, '').tr(' ', '+')
     if foil
       next unless c['foil']
-      next "http://www.mtggoldfish.com/price/#{set}:Foil/#{name}"
+      next "https://www.mtggoldfish.com/price/#{set}:Foil/#{name}"
     else
       next if c['foil']
-      next "http://www.mtggoldfish.com/price/#{set}/#{name}"
+      next "https://www.mtggoldfish.com/price/#{set}/#{name}"
     end
   end
 
