@@ -161,11 +161,28 @@ def combo_info(cards)
   make_response('Combo', attachments)
 end
 
+# slack provides a place to post to for longer calls
+def post(response_url, data)
+  uri = URI.parse(response_url)
+  req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+  req.body = data
+  Net::HTTP.start(uri.hostname, uri.port) do |http|
+    http.request(req)
+  end
+end
+
 post '/' do
   cards = params['text'].split '+'
-  if cards.length == 1
-    json card_info(cards.first)
-  else
-    json combo_info(cards)
+  Thread.new do
+    post(params['response_url'], if cards.length == 1
+                                   card_info(cards.first)
+                                 else
+                                   combo_info(cards)
+                                 end
+        )
   end
+  json(
+    text: 'Fetching card..',
+    response_type: 'ephemeral'
+  )
 end
