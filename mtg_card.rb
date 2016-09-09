@@ -164,22 +164,26 @@ end
 # slack provides a place to post to for longer calls
 def post(response_url, data)
   uri = URI.parse(response_url)
-  req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  http.ssl_version = :TLSv1
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+  req = Net::HTTP::Post.new(uri.request_uri)
   req.body = data
-  Net::HTTP.start(uri.hostname, uri.port) do |http|
-    http.request(req)
-  end
+  req['Content-Type'] = 'application/json'
+
+  http.request(req)
 end
 
 post '/' do
   cards = params['text'].split '+'
-  Thread.new do
+  fork do
     post(params['response_url'], if cards.length == 1
-                                   card_info(cards.first)
+                                   json card_info(cards.first)
                                  else
-                                   combo_info(cards)
-                                 end
-        )
+                                   json combo_info(cards)
+                                 end)
   end
   json(
     text: 'Fetching card..',
