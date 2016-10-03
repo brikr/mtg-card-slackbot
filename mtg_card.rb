@@ -138,6 +138,7 @@ def card_info(text)
   make_response('', attachments)
 end
 
+# grabs all info regarding the wombo combo card info
 def combo_info(cards)
   attachments = []
   cards.each do |card_name|
