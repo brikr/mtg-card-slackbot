@@ -56,8 +56,7 @@ def card_info(text)
   card = data.first if card.nil?
 
   if card.nil?
-    return make_response("Could not match `#{text}` to any cards.",
-                         'ephemeral')
+    return make_response("Could not match `#{text}` to any cards.", 'ephemeral')
   end
 
   cost = {
@@ -148,8 +147,7 @@ def combo_info(cards)
     card = data.first
 
     if card.nil?
-      return make_response("Could not match `#{card_name}` to any cards.",
-                           'ephemeral')
+      return make_response("Could not match `#{card_name}` to any cards.", 'ephemeral')
     end
 
     attachments << {
