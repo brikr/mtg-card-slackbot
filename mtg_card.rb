@@ -48,7 +48,7 @@ def low_price(name, foil = false)
   prices.select { |p| p > 0 }.min
 end
 
-def card_info(text)
+def card_info(text, requester = nil)
   uri = URI.parse('https://api.deckbrew.com/mtg/cards')
   uri.query = URI.encode_www_form(name: text)
   data = JSON.parse(Net::HTTP.get(uri))
@@ -135,10 +135,11 @@ def card_info(text)
     image_url: card['editions'].max_by { |e| e['multiverse_id'] }['image_url']
   }]
 
-  make_response('', attachments)
+  text = requester ? "Card requested by #{requester}" : ''
+  make_response(text, attachments)
 end
 
-def combo_info(cards)
+def combo_info(cards, requester = nil)
   attachments = []
   cards.each do |card_name|
     card_name.strip!
@@ -158,7 +159,8 @@ def combo_info(cards)
     }
   end
 
-  make_response('Combo', attachments)
+  text = requester ? "Combo requested by #{requester}" : 'Combo'
+  make_response(text, attachments)
 end
 
 # slack provides a place to post to for longer calls
