@@ -135,7 +135,7 @@ def card_info(text, requester = nil)
     image_url: card['editions'].max_by { |e| e['multiverse_id'] }['image_url']
   }]
 
-  text = requester ? "Card requested by @#{requester}" : ''
+  text = requester ? "Card requested by #{requester}" : ''
   make_response(text, attachments)
 end
 
@@ -159,7 +159,7 @@ def combo_info(cards, requester = nil)
     }
   end
 
-  text = requester ? "Combo requested by @#{requester}" : 'Combo'
+  text = requester ? "Combo requested by #{requester}" : 'Combo'
   make_response(text, attachments)
 end
 
